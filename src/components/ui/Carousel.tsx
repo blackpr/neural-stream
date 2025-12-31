@@ -98,7 +98,7 @@ function CarouselContent({ childIds, parentId }: CarouselProps) {
     // (though logic below handles existence check)
     if (scrollContainerRef.current && comments[selectedIndex]) {
       const container = scrollContainerRef.current;
-      const cards = container.querySelectorAll('button');
+      const cards = container.querySelectorAll('[role="button"]');
       const selectedCard = cards[selectedIndex] as HTMLElement;
 
       if (selectedCard) {
