@@ -8,7 +8,7 @@ import { StoryGrid } from '@/components/ui/StoryGrid';
 import { StoryList } from '@/components/ui/StoryList';
 import { ViewMode } from '@/domain/types/ViewMode';
 import { getViewMode, setViewMode } from '@/infrastructure/storage/ViewPreferenceStorage';
-import { getStoredFocusIndex, setStoredFocusIndex, clearStoredFocusIndex } from '@/infrastructure/storage/NavigationStorage';
+import { getStoredFocusIndex, setStoredFocusIndex, clearStoredFocusIndex, clearAllCommentFocusIndices } from '@/infrastructure/storage/NavigationStorage';
 
 export default function HomePageClient() {
   const [viewMode, setViewModeState] = useState<ViewMode>('list');
@@ -112,6 +112,11 @@ export default function HomePageClient() {
     // Load saved focus
     const savedFocus = getStoredFocusIndex();
     setInitialFocusIndex(savedFocus);
+
+    // If no focus is saved (fresh load or refresh), clear any stale comment indices
+    if (savedFocus === -1) {
+      clearAllCommentFocusIndices();
+    }
   }, []);
 
   const handleViewToggle = (mode: ViewMode) => {

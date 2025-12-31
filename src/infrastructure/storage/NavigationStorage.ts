@@ -59,3 +59,22 @@ export function setStoredCommentFocusIndex(parentId: string | number, index: num
     console.warn('Failed to save comment focus index to sessionStorage', e);
   }
 }
+
+/**
+ * Clear all comment focus indices (used on home page refresh)
+ */
+export function clearAllCommentFocusIndices(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith(`${FOCUS_INDEX_KEY}-comment-`)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => sessionStorage.removeItem(key));
+  } catch (e) {
+    console.warn('Failed to clear comment focus indices', e);
+  }
+}
