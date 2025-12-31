@@ -1,26 +1,273 @@
 @import "tailwindcss";
 
+/* ============================================
+   CYBER TERMINAL DESIGN SYSTEM
+   ============================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core Colors */
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #121212;
+  
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+  --text-muted: #525252;
+  
+  /* Accent Colors */
+  --accent-amber: #FF6B00;
+  --accent-amber-dim: #cc5500;
+  --accent-amber-bright: #ff8533;
+  
+  /* Border Colors */
+  --border-subtle: #1a1a1a;
+  --border-medium: #262626;
+  --border-accent: var(--accent-amber);
+  
+  /* Shadows */
+  --shadow-glow: 0 0 20px rgba(255, 107, 0, 0.3);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.5);
+  
+  /* Fonts */
+  --font-ui: var(--font-jetbrains);
+  --font-body: var(--font-crimson);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Extend Tailwind with custom colors */
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent-amber: var(--accent-amber);
+  --color-accent-amber-dim: var(--accent-amber-dim);
+  --color-accent-amber-bright: var(--accent-amber-bright);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-medium: var(--border-medium);
+  
+  /* Font families */
+  --font-jetbrains: var(--font-jetbrains);
+  --font-crimson: var(--font-crimson);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-ui), monospace;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Noise texture overlay for depth */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.03;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes glitch {
+  0%, 100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 107, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 107, 0, 0.6);
+  }
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.animate-slide-up {
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-glitch {
+  animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.glow-accent {
+  box-shadow: var(--shadow-glow);
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-ui), monospace;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+p, article {
+  font-family: var(--font-body), serif;
+  line-height: 1.7;
+}
+
+code, pre {
+  font-family: var(--font-ui), monospace;
+}
+
+/* Code blocks in comments */
+pre {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-medium);
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+code {
+  background: var(--bg-secondary);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* ============================================
+   LINKS
+   ============================================ */
+
+a {
+  color: var(--accent-amber);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--accent-amber-bright);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--accent-amber);
+  outline-offset: 2px;
+}
+
+/* External links in comments */
+article a {
+  text-decoration: underline;
+  text-decoration-color: var(--accent-amber-dim);
+  text-underline-offset: 2px;
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-amber-dim);
+}
+
+/* ============================================
+   SELECTION
+   ============================================ */
+
+::selection {
+  background: var(--accent-amber);
+  color: var(--bg-primary);
+}
+
+::-moz-selection {
+  background: var(--accent-amber);
+  color: var(--bg-primary);
 }
