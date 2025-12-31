@@ -94,15 +94,25 @@ function CarouselContent({ childIds, parentId }: CarouselProps) {
   // Auto-scroll selected card into view
   useEffect(() => {
     // Only scroll if we have comments and the index is valid
-    // This prevents jumping if we restore an index that hasn't loaded yet
-    // (though logic below handles existence check)
     if (scrollContainerRef.current && comments[selectedIndex]) {
       const container = scrollContainerRef.current;
       const cards = container.querySelectorAll('[role="button"]');
       const selectedCard = cards[selectedIndex] as HTMLElement;
 
       if (selectedCard) {
-        selectedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        // Calculate position to center the card without scrolling the page
+        const containerRect = container.getBoundingClientRect();
+        const cardRect = selectedCard.getBoundingClientRect();
+
+        const scrollLeft = container.scrollLeft +
+          (cardRect.left - containerRect.left) -
+          (container.clientWidth / 2) +
+          (cardRect.width / 2);
+
+        container.scrollTo({
+          left: scrollLeft,
+          behavior: 'smooth'
+        });
       }
     }
   }, [selectedIndex, comments]);
