@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { hnRepository } from '@/infrastructure/repositories/HNFirebaseRepository';
 import { ViewToggle } from '@/components/ui/ViewToggle';
 import { StoryGrid } from '@/components/ui/StoryGrid';
@@ -11,13 +12,38 @@ import { Story } from '@/domain/entities/Story';
 
 export default function Home() {
   const [viewMode, setViewModeState] = useState<ViewMode>('list');
-  const [stories, setStories] = useState<Story[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [offset, setOffset] = useState(0);
   const PAGE_SIZE = 30;
 
-  // Refs for keyboard navigation management
+  // React Query Infinite Scroll
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status,
+  } = useInfiniteQuery({
+    queryKey: ['topStories'],
+    queryFn: async ({ pageParam = 0 }) => {
+      const stories = await hnRepository.getTopStories(PAGE_SIZE, pageParam);
+      return stories;
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.length === PAGE_SIZE ? allPages.length * PAGE_SIZE : undefined;
+    },
+    // Keep unused data in cache for 10 minutes to support back navigation
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const stories = useMemo(() => {
+    return data?.pages.flat() || [];
+  }, [data]);
+
+  const loading = status === 'pending';
+  // We don't need explicit loadingMore state matching manual ref, 
+  // isFetchingNextPage covers it.
+
   // Refs for keyboard navigation management
   const loadMoreBtnRef = useRef<HTMLButtonElement>(null);
   const prevStoryCountRef = useRef(0);
@@ -28,12 +54,15 @@ export default function Home() {
 
   // Focus management after loading new stories
   useEffect(() => {
-    if (shouldFocusNewStoriesRef.current && stories.length > prevStoryCountRef.current) {
+    // If we have new stories (and not just initial load)
+    if (shouldFocusNewStoriesRef.current && stories.length > prevStoryCountRef.current && prevStoryCountRef.current > 0) {
       // Focus the first new story
-      storyComponentRef.current?.focusIndex(prevStoryCountRef.current);
-      shouldFocusNewStoriesRef.current = false;
-      // Also blur the button so we don't have dual focus
-      loadMoreBtnRef.current?.blur();
+      // Small timeout to allow render
+      setTimeout(() => {
+        storyComponentRef.current?.focusIndex(prevStoryCountRef.current);
+        shouldFocusNewStoriesRef.current = false;
+        loadMoreBtnRef.current?.blur();
+      }, 50);
     }
     prevStoryCountRef.current = stories.length;
   }, [stories]);
@@ -51,26 +80,11 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Load view preference and stories on mount
+  // Load view preference on mount
   useEffect(() => {
     // Load view preference
     const savedMode = getViewMode();
     setViewModeState(savedMode);
-
-    // Load initial stories
-    async function loadInitialStories() {
-      try {
-        const fetchedStories = await hnRepository.getTopStories(PAGE_SIZE, 0);
-        setStories(fetchedStories);
-        setOffset(PAGE_SIZE);
-      } catch (error) {
-        console.error('Failed to load stories:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadInitialStories();
   }, []);
 
   const handleViewToggle = (mode: ViewMode) => {
@@ -79,23 +93,9 @@ export default function Home() {
   };
 
   const handleLoadMore = async () => {
-    if (loadingMore) return;
-
-    setLoadingMore(true);
+    if (isFetchingNextPage) return;
     shouldFocusNewStoriesRef.current = true;
-    try {
-      const moreStories = await hnRepository.getTopStories(PAGE_SIZE, offset);
-      setStories(prev => {
-        const existingIds = new Set(prev.map(s => s.id));
-        const uniqueMore = moreStories.filter(s => !existingIds.has(s.id));
-        return [...prev, ...uniqueMore];
-      });
-      setOffset(prev => prev + PAGE_SIZE);
-    } catch (error) {
-      console.error('Failed to load more stories:', error);
-    } finally {
-      setLoadingMore(false);
-    }
+    fetchNextPage();
   };
 
   const handleNavigatePastEnd = () => {
@@ -170,20 +170,20 @@ export default function Home() {
                 onClick={handleLoadMore}
                 onKeyDown={handleButtonKeyDown}
                 // Use aria-disabled instead of disabled to maintain focus during loading
-                aria-disabled={loadingMore}
+                aria-disabled={isFetchingNextPage}
                 className={`group relative px-8 py-3 bg-transparent overflow-hidden rounded-none border transition-all focus:outline-none focus:ring-2 focus:ring-accent-amber focus:ring-offset-2 focus:ring-offset-bg-primary
-                  ${loadingMore
+                  ${isFetchingNextPage
                     ? 'border-text-secondary/10 cursor-wait opacity-70'
                     : 'border-text-secondary/30 hover:border-accent-amber focus-visible:bg-accent-amber/10'
                   }`}
               >
-                <div className={`absolute inset-0 w-0 bg-accent-amber transition-all duration-[250ms] ease-out opacity-10 ${!loadingMore && 'group-hover:w-full'}`}></div>
+                <div className={`absolute inset-0 w-0 bg-accent-amber transition-all duration-[250ms] ease-out opacity-10 ${!isFetchingNextPage && 'group-hover:w-full'}`}></div>
                 <div className="relative flex items-center gap-3">
-                  {loadingMore && (
+                  {isFetchingNextPage && (
                     <div className="w-4 h-4 border-2 border-text-primary border-t-transparent rounded-full animate-spin"></div>
                   )}
-                  <span className={`font-mono text-sm tracking-widest transition-colors ${loadingMore ? 'text-text-secondary' : 'text-text-primary group-hover:text-accent-amber'}`}>
-                    {loadingMore ? 'DOWNLOADING DATA...' : 'LOAD MORE SIGNALS'}
+                  <span className={`font-mono text-sm tracking-widest transition-colors ${isFetchingNextPage ? 'text-text-secondary' : 'text-text-primary group-hover:text-accent-amber'}`}>
+                    {isFetchingNextPage ? 'DOWNLOADING DATA...' : 'LOAD MORE SIGNALS'}
                   </span>
                 </div>
               </button>

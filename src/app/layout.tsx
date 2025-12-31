@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Crimson_Pro } from "next/font/google";
 import "./globals.css";
+import { ReactQueryProvider } from "@/infrastructure/providers/ReactQueryProvider";
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains",
@@ -31,7 +32,9 @@ export default function RootLayout({
       <body
         className={`${jetbrainsMono.variable} ${crimsonPro.variable} antialiased`}
       >
-        {children}
+        <ReactQueryProvider>
+          {children}
+        </ReactQueryProvider>
       </body>
     </html>
   );
