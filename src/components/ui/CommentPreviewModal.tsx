@@ -15,15 +15,23 @@ export function CommentPreviewModal({ comment, onClose, onNavigate }: CommentPre
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === ' ') {
         e.preventDefault();
+        e.stopPropagation();
         onClose();
       } else if (e.key === 'Enter') {
         e.preventDefault();
+        e.stopPropagation();
         onNavigate();
+      } else if (e.key === 'Escape') {
+        // Close modal and stop propagation to prevent page navigation
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    // Use capture phase to intercept before other handlers
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [onClose, onNavigate]);
 
   // Format timestamp
@@ -92,7 +100,7 @@ export function CommentPreviewModal({ comment, onClose, onNavigate }: CommentPre
         <div className="border-t border-border-medium bg-bg-tertiary px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex gap-4 text-xs font-mono text-text-muted">
-              <span>SPACE to close</span>
+              <span>SPACE or ESC to close</span>
             </div>
             <button
               onClick={onNavigate}
