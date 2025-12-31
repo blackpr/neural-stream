@@ -63,10 +63,8 @@ function CarouselContent({ childIds }: CarouselProps) {
       } else if (e.key === 'Enter' && comments[selectedIndex]) {
         e.preventDefault();
         router.push(`/item/${comments[selectedIndex].id}`);
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        router.back();
       }
+      // Note: ESC is handled by ItemPageClient component
     }
 
     window.addEventListener('keydown', handleKeyDown);
