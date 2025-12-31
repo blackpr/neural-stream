@@ -8,6 +8,7 @@ import { StoryGrid } from '@/components/ui/StoryGrid';
 import { StoryList } from '@/components/ui/StoryList';
 import { ViewMode } from '@/domain/types/ViewMode';
 import { getViewMode, setViewMode } from '@/infrastructure/storage/ViewPreferenceStorage';
+import { getStoredFocusIndex, setStoredFocusIndex, clearStoredFocusIndex } from '@/infrastructure/storage/NavigationStorage';
 import { Story } from '@/domain/entities/Story';
 
 export default function Home() {
@@ -49,6 +50,10 @@ export default function Home() {
   const prevStoryCountRef = useRef(0);
   const shouldFocusNewStoriesRef = useRef(false);
 
+  // Focus persistence
+  const [initialFocusIndex, setInitialFocusIndex] = useState(-1);
+  const hasRestoredFocusRef = useRef(false);
+
   // Using explicit handle types
   const storyComponentRef = useRef<{ focusLast: () => void; focusIndex: (index: number) => void }>(null);
 
@@ -56,16 +61,34 @@ export default function Home() {
   useEffect(() => {
     // If we have new stories (and not just initial load)
     if (shouldFocusNewStoriesRef.current && stories.length > prevStoryCountRef.current && prevStoryCountRef.current > 0) {
+      const indexToFocus = prevStoryCountRef.current;
       // Focus the first new story
       // Small timeout to allow render
       setTimeout(() => {
-        storyComponentRef.current?.focusIndex(prevStoryCountRef.current);
+        storyComponentRef.current?.focusIndex(indexToFocus);
         shouldFocusNewStoriesRef.current = false;
         loadMoreBtnRef.current?.blur();
       }, 50);
     }
+    // Initial load restoration - only once
+    else if (!hasRestoredFocusRef.current && stories.length > 0 && initialFocusIndex >= 0) {
+      if (initialFocusIndex < stories.length) {
+        setTimeout(() => {
+          storyComponentRef.current?.focusIndex(initialFocusIndex);
+          hasRestoredFocusRef.current = true;
+          // Clear storage so we don't restore again on simple refresh
+          clearStoredFocusIndex();
+        }, 100);
+      }
+    }
+
     prevStoryCountRef.current = stories.length;
-  }, [stories]);
+  }, [stories, initialFocusIndex]);
+
+  // Handle focus change - no longer auto-saving
+  const handleFocusChange = (index: number) => {
+    // We only save explicitly on navigation now via StoryList/StoryGrid
+  };
 
   // Escape key handler - do nothing on homepage
   useEffect(() => {
@@ -85,6 +108,10 @@ export default function Home() {
     // Load view preference
     const savedMode = getViewMode();
     setViewModeState(savedMode);
+
+    // Load saved focus
+    const savedFocus = getStoredFocusIndex();
+    setInitialFocusIndex(savedFocus);
   }, []);
 
   const handleViewToggle = (mode: ViewMode) => {
@@ -154,12 +181,18 @@ export default function Home() {
                 ref={storyComponentRef}
                 stories={stories}
                 onNavigatePastEnd={handleNavigatePastEnd}
+                initialSelectedIndex={initialFocusIndex}
+                onFocusChange={handleFocusChange}
+                onNavigate={(index) => setStoredFocusIndex(index)}
               />
             ) : (
               <StoryList
                 ref={storyComponentRef}
                 stories={stories}
                 onNavigatePastEnd={handleNavigatePastEnd}
+                initialSelectedIndex={initialFocusIndex}
+                onFocusChange={handleFocusChange}
+                onNavigate={(index) => setStoredFocusIndex(index)}
               />
             )}
 

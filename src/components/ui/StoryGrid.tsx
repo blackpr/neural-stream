@@ -6,6 +6,9 @@ import { StoryCard } from './StoryCard';
 interface StoryGridProps {
   stories: Story[];
   onNavigatePastEnd?: () => void;
+  initialSelectedIndex?: number;
+  onFocusChange?: (index: number) => void;
+  onNavigate?: (index: number) => void;
 }
 
 export interface StoryGridHandle {
@@ -13,8 +16,8 @@ export interface StoryGridHandle {
   focusIndex: (index: number) => void;
 }
 
-export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories, onNavigatePastEnd }, ref) => {
-  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories, onNavigatePastEnd, initialSelectedIndex = -1, onFocusChange, onNavigate }, ref) => {
+  const [selectedIndex, setSelectedIndex] = useState<number>(initialSelectedIndex);
   const router = useRouter();
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -100,6 +103,7 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
         });
       } else if (e.key === 'Enter' && selectedIndex >= 0 && stories[selectedIndex]) {
         e.preventDefault();
+        onNavigate?.(selectedIndex);
         router.push(`/item/${stories[selectedIndex].id}`);
       }
     }
@@ -118,7 +122,12 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
         selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-  }, [selectedIndex]);
+
+    // Notify parent of focus change
+    if (selectedIndex >= 0) {
+      onFocusChange?.(selectedIndex);
+    }
+  }, [selectedIndex, onFocusChange]);
 
   return (
     <div
@@ -138,7 +147,10 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
             index={index}
             variant="grid"
             isSelected={selectedIndex === index}
-            onClick={() => setSelectedIndex(index)}
+            onClick={() => {
+              setSelectedIndex(index);
+              onNavigate?.(index);
+            }}
           />
         </div>
       ))}

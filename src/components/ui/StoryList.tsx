@@ -6,6 +6,9 @@ import { StoryCard } from './StoryCard';
 interface StoryListProps {
   stories: Story[];
   onNavigatePastEnd?: () => void;
+  initialSelectedIndex?: number;
+  onFocusChange?: (index: number) => void;
+  onNavigate?: (index: number) => void;
 }
 
 export interface StoryListHandle {
@@ -13,8 +16,8 @@ export interface StoryListHandle {
   focusIndex: (index: number) => void;
 }
 
-export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories, onNavigatePastEnd }, ref) => {
-  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories, onNavigatePastEnd, initialSelectedIndex = -1, onFocusChange, onNavigate }, ref) => {
+  const [selectedIndex, setSelectedIndex] = useState<number>(initialSelectedIndex);
   const router = useRouter();
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -59,6 +62,7 @@ export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories,
         });
       } else if (e.key === 'Enter' && selectedIndex >= 0 && stories[selectedIndex]) {
         e.preventDefault();
+        onNavigate?.(selectedIndex);
         router.push(`/item/${stories[selectedIndex].id}`);
       }
     }
@@ -77,7 +81,12 @@ export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories,
         selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-  }, [selectedIndex]);
+
+    // Notify parent of focus change
+    if (selectedIndex >= 0) {
+      onFocusChange?.(selectedIndex);
+    }
+  }, [selectedIndex, onFocusChange]);
 
   return (
     <div ref={listRef} className="flex flex-col gap-2">
@@ -94,7 +103,10 @@ export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories,
             index={index}
             variant="list"
             isSelected={selectedIndex === index}
-            onClick={() => setSelectedIndex(index)}
+            onClick={() => {
+              setSelectedIndex(index);
+              onNavigate?.(index);
+            }}
           />
         </div>
       ))}
