@@ -6,18 +6,27 @@ import { ReplyCard } from './ReplyCard';
 import { CommentPreviewModal } from './CommentPreviewModal';
 import { HNApiMapper } from '@/infrastructure/mappers/HNApiMapper';
 import { useRouter } from 'next/navigation';
+import { getStoredCommentFocusIndex, setStoredCommentFocusIndex } from '@/infrastructure/storage/NavigationStorage';
 
 interface CarouselProps {
   childIds: string[];
+  parentId: string | number;
 }
 
 /* Use an extended type locally to include the total count */
-function CarouselContent({ childIds }: CarouselProps) {
+function CarouselContent({ childIds, parentId }: CarouselProps) {
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(() => {
+    return getStoredCommentFocusIndex(parentId);
+  });
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewComment, setPreviewComment] = useState<Comment | null>(null);
+
+  // Persist focus index
+  useEffect(() => {
+    setStoredCommentFocusIndex(parentId, selectedIndex);
+  }, [selectedIndex, parentId]);
 
   useEffect(() => {
     async function fetchComments() {
@@ -84,6 +93,9 @@ function CarouselContent({ childIds }: CarouselProps) {
 
   // Auto-scroll selected card into view
   useEffect(() => {
+    // Only scroll if we have comments and the index is valid
+    // This prevents jumping if we restore an index that hasn't loaded yet
+    // (though logic below handles existence check)
     if (scrollContainerRef.current && comments[selectedIndex]) {
       const container = scrollContainerRef.current;
       const cards = container.querySelectorAll('button');
@@ -193,7 +205,7 @@ function CarouselContent({ childIds }: CarouselProps) {
   );
 }
 
-export function Carousel({ childIds }: CarouselProps) {
+export function Carousel({ childIds, parentId }: CarouselProps) {
   if (childIds.length === 0) {
     return (
       <div className="border-t border-border-medium bg-bg-secondary px-6 py-12 text-center">
@@ -220,9 +232,10 @@ export function Carousel({ childIds }: CarouselProps) {
             ))}
           </div>
         }>
-          <CarouselContent childIds={childIds} />
+          <CarouselContent childIds={childIds} parentId={parentId} key={parentId} />
         </Suspense>
       </div>
     </div>
   );
 }
+

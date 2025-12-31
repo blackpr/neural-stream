@@ -50,7 +50,7 @@ export function ItemPageClient({ node, ancestry = [] }: ItemPageClientProps) {
       </div>
 
       {/* Carousel (Replies) */}
-      <Carousel childIds={childIds} />
+      <Carousel childIds={childIds} parentId={node.id} />
     </div>
   );
 }

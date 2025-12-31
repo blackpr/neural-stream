@@ -37,3 +37,25 @@ export function clearStoredFocusIndex(): void {
     console.warn('Failed to clear focus index from sessionStorage', e);
   }
 }
+
+export function getStoredCommentFocusIndex(parentId: string | number): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const key = `${FOCUS_INDEX_KEY}-comment-${parentId}`;
+    const stored = sessionStorage.getItem(key);
+    return stored ? parseInt(stored, 10) : 0;
+  } catch (e) {
+    console.warn('Failed to read comment focus index from sessionStorage', e);
+    return 0;
+  }
+}
+
+export function setStoredCommentFocusIndex(parentId: string | number, index: number): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const key = `${FOCUS_INDEX_KEY}-comment-${parentId}`;
+    sessionStorage.setItem(key, String(index));
+  } catch (e) {
+    console.warn('Failed to save comment focus index to sessionStorage', e);
+  }
+}
