@@ -11,6 +11,10 @@ export function Stack({ path }: StackProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeftPos = useRef(0);
+
   // Auto-scroll to the right when path changes
   useEffect(() => {
     if (containerRef.current) {
@@ -25,7 +29,6 @@ export function Stack({ path }: StackProps) {
 
     const handleWheel = (e: WheelEvent) => {
       if (e.deltaY !== 0) {
-        // Prevent default vertical scroll and scroll horizontally instead
         e.preventDefault();
         container.scrollLeft += e.deltaY;
       }
@@ -38,6 +41,32 @@ export function Stack({ path }: StackProps) {
     };
   }, []);
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDragging.current = true;
+    if (containerRef.current) {
+      startX.current = e.pageX - containerRef.current.offsetLeft;
+      scrollLeftPos.current = containerRef.current.scrollLeft;
+      containerRef.current.style.cursor = 'grabbing';
+      containerRef.current.style.userSelect = 'none';
+    }
+  };
+
+  const handleMouseUpOrLeave = () => {
+    isDragging.current = false;
+    if (containerRef.current) {
+      containerRef.current.style.cursor = 'grab';
+      containerRef.current.style.removeProperty('user-select');
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !containerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - containerRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5; // Scroll speed multiplier
+    containerRef.current.scrollLeft = scrollLeftPos.current - walk;
+  };
+
   if (path.length === 0) return null;
 
   return (
@@ -45,7 +74,11 @@ export function Stack({ path }: StackProps) {
       <div className="max-w-4xl mx-auto">
         <div
           ref={containerRef}
-          className="flex items-center gap-2 text-sm font-mono overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUpOrLeave}
+          onMouseLeave={handleMouseUpOrLeave}
+          onMouseMove={handleMouseMove}
+          className="flex items-center gap-2 text-sm font-mono overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing"
         >
           <button
             onClick={() => router.push('/')}
