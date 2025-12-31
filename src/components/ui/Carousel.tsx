@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { Comment } from '@/domain/entities/Comment';
 import { ReplyCard } from './ReplyCard';
+import { CommentPreviewModal } from './CommentPreviewModal';
 import { HNApiMapper } from '@/infrastructure/mappers/HNApiMapper';
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +15,7 @@ function CarouselContent({ childIds }: CarouselProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewComment, setPreviewComment] = useState<Comment | null>(null);
 
   useEffect(() => {
     async function fetchComments() {
@@ -46,12 +48,18 @@ function CarouselContent({ childIds }: CarouselProps) {
   // Keyboard navigation
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      // Don't handle keys if modal is open
+      if (previewComment) return;
+
       if (e.key === 'ArrowRight') {
         e.preventDefault();
         setSelectedIndex((prev) => Math.min(prev + 1, comments.length - 1));
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         setSelectedIndex((prev) => Math.max(prev - 1, 0));
+      } else if (e.key === ' ' && comments[selectedIndex]) {
+        e.preventDefault();
+        setPreviewComment(comments[selectedIndex]);
       } else if (e.key === 'Enter' && comments[selectedIndex]) {
         e.preventDefault();
         router.push(`/item/${comments[selectedIndex].id}`);
@@ -63,7 +71,7 @@ function CarouselContent({ childIds }: CarouselProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [comments.length, selectedIndex, router, comments]);
+  }, [comments.length, selectedIndex, router, comments, previewComment]);
 
   // Auto-scroll selected card into view
   useEffect(() => {
@@ -162,6 +170,15 @@ function CarouselContent({ childIds }: CarouselProps) {
           ))}
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {previewComment && (
+        <CommentPreviewModal
+          comment={previewComment}
+          onClose={() => setPreviewComment(null)}
+          onNavigate={() => router.push(`/item/${previewComment.id}`)}
+        />
+      )}
     </div>
   );
 }

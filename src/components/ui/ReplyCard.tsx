@@ -15,9 +15,15 @@ interface ReplyCardProps {
 export function ReplyCard({ id, author, text, timestamp, replyCount, isSelected, onClick }: ReplyCardProps) {
   const router = useRouter();
 
-  // Strip HTML tags for preview
-  const plainText = text.replace(/<[^>]*>/g, '');
-  const preview = plainText.length > 150 ? plainText.substring(0, 150) + '...' : plainText;
+  // Strip HTML tags and decode HTML entities for preview
+  const stripHtml = (html: string) => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  };
+
+  const plainText = stripHtml(text);
+  const preview = plainText.length > 300 ? plainText.substring(0, 300) + '...' : plainText;
 
   const handleClick = () => {
     onClick();
@@ -53,9 +59,11 @@ export function ReplyCard({ id, author, text, timestamp, replyCount, isSelected,
         {/* Selection Indicator */}
         {isSelected && (
           <div className="mt-auto pt-3 border-t border-accent-amber">
-            <span className="text-accent-amber text-xs font-mono font-bold">
-              PRESS ENTER TO DIVE IN →
-            </span>
+            <div className="flex flex-col gap-1">
+              <span className="text-accent-amber text-xs font-mono font-bold">
+                SPACE to preview • ENTER to dive in →
+              </span>
+            </div>
           </div>
         )}
       </div>
