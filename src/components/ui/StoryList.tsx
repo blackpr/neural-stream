@@ -46,7 +46,7 @@ export function StoryList({ stories }: StoryListProps) {
       const selectedCard = cards[selectedIndex] as HTMLElement;
 
       if (selectedCard) {
-        selectedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
   }, [selectedIndex]);
@@ -57,8 +57,8 @@ export function StoryList({ stories }: StoryListProps) {
         <div
           key={story.id}
           className={`transition-all duration-200 ${selectedIndex === index
-              ? 'ring-2 ring-accent-amber ring-offset-2 ring-offset-bg-primary'
-              : ''
+            ? 'ring-2 ring-accent-amber ring-offset-2 ring-offset-bg-primary'
+            : ''
             }`}
         >
           <StoryCard

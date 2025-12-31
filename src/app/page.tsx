@@ -56,20 +56,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-bg-primary">
       {/* Header */}
-      <header className="border-b border-border-medium bg-bg-secondary sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-8">
+      <header className="border-b border-border-subtle">
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-2 h-12 bg-accent-amber animate-pulse-glow" />
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">
-                  THE NEURAL STREAM
-                </h1>
-                <p className="text-text-secondary text-sm mt-1 font-mono">
-                  HACKER NEWS // REIMAGINED
-                </p>
-              </div>
-            </div>
+            <h1 className="text-lg font-bold tracking-tight">
+              THE NEURAL STREAM
+            </h1>
 
             {/* View Toggle */}
             <ViewToggle currentMode={viewMode} onToggle={handleViewToggle} />
