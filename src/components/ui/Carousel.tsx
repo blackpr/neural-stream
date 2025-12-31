@@ -11,7 +11,9 @@ interface CarouselProps {
   childIds: string[];
 }
 
+/* Use an extended type locally to include the total count */
 function CarouselContent({ childIds }: CarouselProps) {
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,13 +25,22 @@ function CarouselContent({ childIds }: CarouselProps) {
       try {
         const fetchedComments = await Promise.all(
           childIds.map(async (id) => {
-            const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
-            const data = await response.json();
-            return HNApiMapper.toStreamNode(data) as Comment;
+            try {
+              // Try Algolia first to get the full tree stats
+              const response = await fetch(`https://hn.algolia.com/api/v1/items/${id}`);
+              if (!response.ok) throw new Error('Algolia fetch failed');
+              const data = await response.json();
+              return HNApiMapper.fromAlgolia(data) as Comment;
+            } catch (err) {
+              // Fallback to Firebase if Algolia fails or is delayed
+              const response = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
+              const data = await response.json();
+              return HNApiMapper.toStreamNode(data) as Comment;
+            }
           })
         );
-        // Filter out deleted comments
-        setComments(fetchedComments.filter(c => !c.isDeleted));
+        // Filter out deleted comments - use type guard or safe access
+        setComments(fetchedComments.filter((c) => !('isDeleted' in c) || !c.isDeleted));
       } catch (error) {
         console.error('Failed to fetch comments:', error);
       } finally {
@@ -162,6 +173,7 @@ function CarouselContent({ childIds }: CarouselProps) {
               text={comment.text}
               timestamp={comment.timestamp}
               replyCount={comment.childIds.length}
+              totalReplyCount={comment.totalReplyCount}
               isSelected={index === selectedIndex}
               onClick={() => setSelectedIndex(index)}
             />

@@ -8,11 +8,12 @@ interface ReplyCardProps {
   text: string;
   timestamp: number;
   replyCount: number;
+  totalReplyCount?: number;
   isSelected: boolean;
   onClick: () => void;
 }
 
-export function ReplyCard({ id, author, text, timestamp, replyCount, isSelected, onClick }: ReplyCardProps) {
+export function ReplyCard({ id, author, text, timestamp, replyCount, totalReplyCount, isSelected, onClick }: ReplyCardProps) {
   const router = useRouter();
 
   // Strip HTML tags and decode HTML entities for preview
@@ -44,9 +45,12 @@ export function ReplyCard({ id, author, text, timestamp, replyCount, isSelected,
           <span className={isSelected ? 'text-accent-amber font-bold' : 'text-text-secondary'}>
             {author}
           </span>
-          {replyCount > 0 && (
+          {(replyCount > 0) && (
             <span className="text-xs text-text-muted">
-              • {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+              • {totalReplyCount !== undefined && totalReplyCount > replyCount
+                ? `${replyCount} direct (${totalReplyCount} total)`
+                : `${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}`
+              }
             </span>
           )}
         </div>

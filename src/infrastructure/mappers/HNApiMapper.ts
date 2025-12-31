@@ -52,6 +52,7 @@ export class HNApiMapper {
       childIds: (item.kids || []).map(String),
       parentId: String(item.parent || ''),
       isDeleted: item.deleted || item.dead || false,
+      totalReplyCount: undefined,
     };
   }
 
@@ -86,5 +87,50 @@ export class HNApiMapper {
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
     return new Date(timestamp * 1000).toLocaleDateString();
+  }
+
+  /**
+   * Map Algolia API data to StreamNode (Story or Comment)
+   */
+  static fromAlgolia(item: any): StreamNode {
+    const countDescendants = (node: any) => {
+      let count = 0;
+      if (node.children) {
+        count += node.children.length;
+        for (const child of node.children) {
+          count += countDescendants(child);
+        }
+      }
+      return count;
+    };
+
+    const totalReplyCount = countDescendants(item);
+
+    // If it's a story (or poll/job), map to Story
+    if (item.type === 'story' || item.type === 'job' || item.type === 'poll') {
+      return {
+        id: String(item.id),
+        title: item.title || 'Untitled',
+        url: item.url,
+        author: item.author || 'unknown',
+        points: item.points || 0,
+        commentCount: totalReplyCount, // Use our calculated count or specific field if available
+        timestamp: item.created_at_i,
+        text: item.text ? this.sanitizeHtml(item.text) : undefined,
+        childIds: (item.children || []).map((c: any) => String(c.id)),
+      };
+    }
+
+    // Otherwise map to Comment
+    return {
+      id: String(item.id),
+      author: item.author || 'unknown',
+      text: this.sanitizeHtml(item.text || ''),
+      timestamp: item.created_at_i,
+      childIds: (item.children || []).map((c: any) => String(c.id)),
+      parentId: String(item.parent_id || ''),
+      isDeleted: false,
+      totalReplyCount,
+    };
   }
 }

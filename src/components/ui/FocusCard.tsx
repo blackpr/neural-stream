@@ -81,7 +81,10 @@ export function FocusCard({ node }: FocusCardProps) {
           {/* Reply Count */}
           {node.childIds.length > 0 && (
             <div className="mt-6 pt-4 border-t border-border-subtle text-text-secondary font-mono text-sm">
-              {node.childIds.length} {node.childIds.length === 1 ? 'reply' : 'replies'}
+              {node.totalReplyCount !== undefined && node.totalReplyCount > node.childIds.length
+                ? `${node.childIds.length} direct (${node.totalReplyCount} total)`
+                : `${node.childIds.length} ${node.childIds.length === 1 ? 'reply' : 'replies'}`
+              }
             </div>
           )}
         </div>

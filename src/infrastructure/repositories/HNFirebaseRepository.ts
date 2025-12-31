@@ -6,6 +6,18 @@ import { HN_API_BASE, CACHE_CONFIG, TOP_STORIES_LIMIT } from '@/lib/constants';
 
 export class HNFirebaseRepository implements IHNRepository {
   async getStreamNode(id: string): Promise<StreamNode> {
+    try {
+      // Try Algolia first to get full tree stats (descendants count for comments)
+      const algoliaResponse = await fetch(`https://hn.algolia.com/api/v1/items/${id}`);
+      if (algoliaResponse.ok) {
+        const algoliaData = await algoliaResponse.json();
+        return HNApiMapper.fromAlgolia(algoliaData);
+      }
+    } catch (error) {
+      console.warn(`Algolia fetch failed for ${id}, falling back to Firebase`, error);
+    }
+
+    // Fallback to Firebase
     const response = await fetch(`${HN_API_BASE}/item/${id}.json`, {
       next: CACHE_CONFIG.item,
     });

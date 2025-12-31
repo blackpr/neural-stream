@@ -72,7 +72,10 @@ export function CommentPreviewModal({ comment, onClose, onNavigate }: CommentPre
               </div>
               {comment.childIds.length > 0 && (
                 <p className="text-xs text-text-secondary font-mono mt-1">
-                  {comment.childIds.length} {comment.childIds.length === 1 ? 'reply' : 'replies'}
+                  {comment.totalReplyCount !== undefined && comment.totalReplyCount > comment.childIds.length
+                    ? `${comment.childIds.length} direct (${comment.totalReplyCount} total)`
+                    : `${comment.childIds.length} ${comment.childIds.length === 1 ? 'reply' : 'replies'}`
+                  }
                 </p>
               )}
             </div>

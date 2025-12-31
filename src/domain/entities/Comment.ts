@@ -6,4 +6,5 @@ export interface Comment {
   childIds: string[];
   parentId: string;
   isDeleted: boolean;
+  totalReplyCount?: number;
 }
