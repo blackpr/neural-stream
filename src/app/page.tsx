@@ -153,7 +153,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-bg-primary">
       {/* Header */}
-      <header className="border-b border-border-subtle sticky top-0 bg-bg-primary/80 backdrop-blur-md z-10 transition-all duration-300">
+      <header className="border-b border-border-subtle bg-bg-primary transition-all duration-300">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-lg font-bold tracking-tight text-text-primary">
