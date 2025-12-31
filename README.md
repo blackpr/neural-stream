@@ -7,6 +7,10 @@ high-density information consumption with a "Cyber Terminal" aesthetic. It
 emphasizes keyboard navigation, readability, and a unique "Focus Stream" user
 experience.
 
+
+https://github.com/user-attachments/assets/1fdcdc50-9af5-47ca-9e94-63f706251a12
+
+
 ## ✨ Features
 
 - **Focus Stream Interface**: A linear, distraction-free reading mode.
