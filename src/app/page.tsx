@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { hnRepository } from '@/infrastructure/repositories/HNFirebaseRepository';
 import { ViewToggle } from '@/components/ui/ViewToggle';
 import { StoryGrid } from '@/components/ui/StoryGrid';
@@ -16,6 +16,27 @@ export default function Home() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const PAGE_SIZE = 30;
+
+  // Refs for keyboard navigation management
+  // Refs for keyboard navigation management
+  const loadMoreBtnRef = useRef<HTMLButtonElement>(null);
+  const prevStoryCountRef = useRef(0);
+  const shouldFocusNewStoriesRef = useRef(false);
+
+  // Using explicit handle types
+  const storyComponentRef = useRef<{ focusLast: () => void; focusIndex: (index: number) => void }>(null);
+
+  // Focus management after loading new stories
+  useEffect(() => {
+    if (shouldFocusNewStoriesRef.current && stories.length > prevStoryCountRef.current) {
+      // Focus the first new story
+      storyComponentRef.current?.focusIndex(prevStoryCountRef.current);
+      shouldFocusNewStoriesRef.current = false;
+      // Also blur the button so we don't have dual focus
+      loadMoreBtnRef.current?.blur();
+    }
+    prevStoryCountRef.current = stories.length;
+  }, [stories]);
 
   // Escape key handler - do nothing on homepage
   useEffect(() => {
@@ -61,6 +82,7 @@ export default function Home() {
     if (loadingMore) return;
 
     setLoadingMore(true);
+    shouldFocusNewStoriesRef.current = true;
     try {
       const moreStories = await hnRepository.getTopStories(PAGE_SIZE, offset);
       setStories(prev => {
@@ -73,6 +95,31 @@ export default function Home() {
       console.error('Failed to load more stories:', error);
     } finally {
       setLoadingMore(false);
+    }
+  };
+
+  const handleNavigatePastEnd = () => {
+    loadMoreBtnRef.current?.focus();
+  };
+
+  const handleButtonKeyDown = (e: React.KeyboardEvent) => {
+    // Navigation keys should be intercepted to prevent them from bubbling
+    // to the window listener (which would reset grid selection to 0)
+    switch (e.key) {
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        // Allow going back to the grid/list with Up or Left
+        e.preventDefault();
+        e.stopPropagation();
+        storyComponentRef.current?.focusLast();
+        loadMoreBtnRef.current?.blur();
+        break;
+      case 'ArrowDown':
+      case 'ArrowRight':
+        e.preventDefault();
+        e.stopPropagation();
+        // Block these keys to prevent "Jump to Top" behavior in Grid/List
+        break;
     }
   };
 
@@ -103,24 +150,39 @@ export default function Home() {
         ) : (
           <div className="space-y-12">
             {viewMode === 'grid' ? (
-              <StoryGrid stories={stories} />
+              <StoryGrid
+                ref={storyComponentRef}
+                stories={stories}
+                onNavigatePastEnd={handleNavigatePastEnd}
+              />
             ) : (
-              <StoryList stories={stories} />
+              <StoryList
+                ref={storyComponentRef}
+                stories={stories}
+                onNavigatePastEnd={handleNavigatePastEnd}
+              />
             )}
 
             {/* Load More Button */}
             <div className="flex justify-center pt-8 border-t border-border-subtle/30">
               <button
+                ref={loadMoreBtnRef}
                 onClick={handleLoadMore}
-                disabled={loadingMore}
-                className="group relative px-8 py-3 bg-transparent overflow-hidden rounded-none border border-text-secondary/30 hover:border-accent-amber transition-colors focus:outline-none focus:ring-2 focus:ring-accent-amber/50"
+                onKeyDown={handleButtonKeyDown}
+                // Use aria-disabled instead of disabled to maintain focus during loading
+                aria-disabled={loadingMore}
+                className={`group relative px-8 py-3 bg-transparent overflow-hidden rounded-none border transition-all focus:outline-none focus:ring-2 focus:ring-accent-amber focus:ring-offset-2 focus:ring-offset-bg-primary
+                  ${loadingMore
+                    ? 'border-text-secondary/10 cursor-wait opacity-70'
+                    : 'border-text-secondary/30 hover:border-accent-amber focus-visible:bg-accent-amber/10'
+                  }`}
               >
-                <div className="absolute inset-0 w-0 bg-accent-amber transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></div>
+                <div className={`absolute inset-0 w-0 bg-accent-amber transition-all duration-[250ms] ease-out opacity-10 ${!loadingMore && 'group-hover:w-full'}`}></div>
                 <div className="relative flex items-center gap-3">
                   {loadingMore && (
                     <div className="w-4 h-4 border-2 border-text-primary border-t-transparent rounded-full animate-spin"></div>
                   )}
-                  <span className="font-mono text-sm tracking-widest text-text-primary group-hover:text-accent-amber transition-colors">
+                  <span className={`font-mono text-sm tracking-widest transition-colors ${loadingMore ? 'text-text-secondary' : 'text-text-primary group-hover:text-accent-amber'}`}>
                     {loadingMore ? 'DOWNLOADING DATA...' : 'LOAD MORE SIGNALS'}
                   </span>
                 </div>

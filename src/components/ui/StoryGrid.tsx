@@ -1,18 +1,33 @@
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useRouter } from 'next/navigation';
 import { Story } from '@/domain/entities/Story';
 import { StoryCard } from './StoryCard';
 
 interface StoryGridProps {
   stories: Story[];
+  onNavigatePastEnd?: () => void;
 }
 
-export function StoryGrid({ stories }: StoryGridProps) {
+export interface StoryGridHandle {
+  focusLast: () => void;
+  focusIndex: (index: number) => void;
+}
+
+export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories, onNavigatePastEnd }, ref) => {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const router = useRouter();
   const gridRef = useRef<HTMLDivElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    focusLast: () => {
+      setSelectedIndex(stories.length - 1);
+    },
+    focusIndex: (index: number) => {
+      if (index >= 0 && index < stories.length) {
+        setSelectedIndex(index);
+      }
+    }
+  }), [stories]);
 
   // Calculate grid dimensions for 2D navigation
   const getGridDimensions = () => {
@@ -30,9 +45,22 @@ export function StoryGrid({ stories }: StoryGridProps) {
   // Keyboard navigation
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      // Ignore if event was already handled (e.g. by a button)
+      // or if the user is focused on an interactive element (input, button, link, etc.)
+      if (e.defaultPrevented || (document.activeElement && document.activeElement !== document.body)) {
+        return;
+      }
+
       const { cols } = getGridDimensions();
 
       if (e.key === 'ArrowRight') {
+        if (selectedIndex === stories.length - 1) {
+          e.preventDefault();
+          setSelectedIndex(-1);
+          onNavigatePastEnd?.();
+          return;
+        }
+
         e.preventDefault();
         setSelectedIndex((prev) => {
           if (prev === -1) return 0;
@@ -46,6 +74,17 @@ export function StoryGrid({ stories }: StoryGridProps) {
         });
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
+
+        // Check if moving down would go past the last item or the last row
+        if (selectedIndex !== -1) {
+          const next = selectedIndex + cols;
+          if (next >= stories.length) {
+            setSelectedIndex(-1);
+            onNavigatePastEnd?.();
+            return;
+          }
+        }
+
         setSelectedIndex((prev) => {
           if (prev === -1) return 0;
           const next = prev + cols;
@@ -66,7 +105,7 @@ export function StoryGrid({ stories }: StoryGridProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedIndex, stories, router]);
+  }, [selectedIndex, stories, router, onNavigatePastEnd]);
 
   // Auto-scroll selected item into view
   useEffect(() => {
@@ -104,4 +143,5 @@ export function StoryGrid({ stories }: StoryGridProps) {
       ))}
     </div>
   );
-}
+});
+StoryGrid.displayName = 'StoryGrid';
