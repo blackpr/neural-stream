@@ -119,7 +119,15 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
       const selectedCard = cards[selectedIndex] as HTMLElement;
 
       if (selectedCard) {
-        selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const rect = selectedCard.getBoundingClientRect();
+        const isInView = (
+          rect.top >= 0 &&
+          rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
+        );
+
+        if (!isInView) {
+          selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }
     }
 
