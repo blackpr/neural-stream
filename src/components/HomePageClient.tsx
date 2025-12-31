@@ -32,7 +32,8 @@ export default function HomePageClient() {
       return lastPage.length === PAGE_SIZE ? allPages.length * PAGE_SIZE : undefined;
     },
     // Keep unused data in cache for 10 minutes to support back navigation
-    staleTime: 5 * 60 * 1000,
+    // Stale time controls when we automatically refetch on window focus
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
@@ -159,8 +160,29 @@ export default function HomePageClient() {
               THE NEURAL STREAM
             </h1>
 
-            {/* View Toggle */}
-            <ViewToggle currentMode={viewMode} onToggle={handleViewToggle} />
+            {/* View Toggle and Refresh */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  window.location.reload();
+                }}
+                className="group flex items-center gap-2 px-3 py-2 text-sm font-mono text-text-secondary hover:text-accent-amber transition-colors"
+                title="Force Refresh Stream"
+              >
+                <span className="sr-only">Refresh Stream</span>
+                <svg
+                  className="w-4 h-4 transition-transform group-hover:rotate-180 duration-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span className="hidden sm:inline">SYNC</span>
+              </button>
+              <ViewToggle currentMode={viewMode} onToggle={handleViewToggle} />
+            </div>
           </div>
         </div>
       </header>

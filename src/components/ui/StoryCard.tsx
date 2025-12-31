@@ -11,7 +11,19 @@ interface StoryCardProps {
 }
 
 export function StoryCard({ story, index, variant = 'grid', isSelected = false, onClick }: StoryCardProps) {
-  const domain = story.url ? new URL(story.url).hostname.replace('www.', '') : null;
+  // Helper to remove anchor tags to prevent nested <a> in <Link> hydration issues
+  const cleanHtml = (html: string) => {
+    return html.replace(/<a\b[^>]*>/gi, '').replace(/<\/a>/gi, '');
+  };
+
+  let domain: string | null = null;
+  try {
+    if (story.url) {
+      domain = new URL(story.url).hostname.replace('www.', '');
+    }
+  } catch (e) {
+    // Invalid URL, ignore domain
+  }
   const timeAgo = HNApiMapper.formatTimestamp(story.timestamp);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -46,7 +58,7 @@ export function StoryCard({ story, index, variant = 'grid', isSelected = false, 
           {story.text && (
             <div
               className="text-xs text-text-secondary line-clamp-2 font-crimson my-1"
-              dangerouslySetInnerHTML={{ __html: story.text }}
+              dangerouslySetInnerHTML={{ __html: cleanHtml(story.text) }}
             />
           )}
 
@@ -57,7 +69,7 @@ export function StoryCard({ story, index, variant = 'grid', isSelected = false, 
               {story.points}
             </span>
             <span>by {story.author}</span>
-            <span>{timeAgo}</span>
+            <span suppressHydrationWarning>{timeAgo}</span>
             <span className="text-text-secondary group-hover:text-accent-amber/80 transition-colors">
               {story.commentCount} comments
             </span>
@@ -92,7 +104,7 @@ export function StoryCard({ story, index, variant = 'grid', isSelected = false, 
         {story.text && (
           <div
             className="text-xs text-text-secondary line-clamp-2 font-crimson"
-            dangerouslySetInnerHTML={{ __html: story.text }}
+            dangerouslySetInnerHTML={{ __html: cleanHtml(story.text) }}
           />
         )}
 
@@ -102,7 +114,7 @@ export function StoryCard({ story, index, variant = 'grid', isSelected = false, 
             <span className="text-accent-amber">▲</span>
             {story.points}
           </span>
-          <span className="text-right">{timeAgo}</span>
+          <span className="text-right" suppressHydrationWarning>{timeAgo}</span>
           <span className="truncate">by {story.author}</span>
           <span className="text-right">{story.commentCount} c</span>
         </div>
