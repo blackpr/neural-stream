@@ -131,7 +131,7 @@ function CarouselContent({ childIds, parentId }: CarouselProps) {
         {[...Array(3)].map((_, i) => (
           <div
             key={i}
-            className="flex-shrink-0 w-80 h-48 bg-bg-secondary border border-border-medium animate-pulse"
+            className="flex-shrink-0 w-96 h-64 bg-bg-secondary border border-border-medium animate-pulse"
           />
         ))}
       </div>
@@ -198,6 +198,7 @@ function CarouselContent({ childIds, parentId }: CarouselProps) {
               totalReplyCount={comment.totalReplyCount}
               isSelected={index === selectedIndex}
               onClick={() => setSelectedIndex(index)}
+              onPreview={() => setPreviewComment(comment)}
             />
           ))}
         </div>
@@ -237,7 +238,7 @@ export function Carousel({ childIds, parentId }: CarouselProps) {
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="flex-shrink-0 w-80 h-48 bg-bg-tertiary border border-border-medium animate-pulse"
+                className="flex-shrink-0 w-96 h-64 bg-bg-tertiary border border-border-medium animate-pulse"
               />
             ))}
           </div>
