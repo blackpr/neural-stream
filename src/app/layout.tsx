@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Crimson_Pro } from "next/font/google";
 import "./globals.css";
-import { KeyboardHandler } from "@/components/KeyboardHandler";
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains",
@@ -32,7 +31,6 @@ export default function RootLayout({
       <body
         className={`${jetbrainsMono.variable} ${crimsonPro.variable} antialiased`}
       >
-        <KeyboardHandler />
         {children}
       </body>
     </html>

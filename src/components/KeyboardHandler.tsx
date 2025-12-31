@@ -8,10 +8,10 @@ export function KeyboardHandler() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Escape key - go back
+      // Escape key - go to homepage
       if (e.key === 'Escape') {
         e.preventDefault();
-        router.back();
+        router.push('/');
       }
     }
 
