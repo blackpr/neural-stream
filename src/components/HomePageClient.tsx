@@ -55,7 +55,7 @@ export default function HomePageClient() {
   const hasRestoredFocusRef = useRef(false);
 
   // Using explicit handle types
-  const storyComponentRef = useRef<{ focusLast: () => void; focusIndex: (index: number, options?: { preventScroll?: boolean }) => void }>(null);
+  const storyComponentRef = useRef<{ focusLast: () => void; focusIndex: (index: number) => void }>(null);
 
   // Focus management after loading new stories
   useEffect(() => {
@@ -74,8 +74,7 @@ export default function HomePageClient() {
     else if (!hasRestoredFocusRef.current && stories.length > 0 && initialFocusIndex >= 0) {
       if (initialFocusIndex < stories.length) {
         setTimeout(() => {
-          // Prevent scroll on restoration as the browser likely handles it (especially on back navigation)
-          storyComponentRef.current?.focusIndex(initialFocusIndex, { preventScroll: true });
+          storyComponentRef.current?.focusIndex(initialFocusIndex);
           hasRestoredFocusRef.current = true;
           // Clear storage so we don't restore again on simple refresh
           clearStoredFocusIndex();
