@@ -13,20 +13,23 @@ interface StoryListProps {
 
 export interface StoryListHandle {
   focusLast: () => void;
-  focusIndex: (index: number) => void;
+  focusIndex: (index: number, options?: { preventScroll?: boolean }) => void;
 }
 
 export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories, onNavigatePastEnd, initialSelectedIndex = -1, onFocusChange, onNavigate }, ref) => {
   const [selectedIndex, setSelectedIndex] = useState<number>(initialSelectedIndex);
   const router = useRouter();
   const listRef = useRef<HTMLDivElement>(null);
+  const shouldScrollRef = useRef(true);
 
   useImperativeHandle(ref, () => ({
     focusLast: () => {
+      shouldScrollRef.current = true;
       setSelectedIndex(stories.length - 1);
     },
-    focusIndex: (index: number) => {
+    focusIndex: (index: number, options?: { preventScroll?: boolean }) => {
       if (index >= 0 && index < stories.length) {
+        shouldScrollRef.current = !options?.preventScroll;
         setSelectedIndex(index);
       }
     }
@@ -50,12 +53,14 @@ export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories,
         }
 
         e.preventDefault();
+        shouldScrollRef.current = true;
         setSelectedIndex((prev) => {
           if (prev === -1) return 0;
           return Math.min(prev + 1, stories.length - 1);
         });
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
+        shouldScrollRef.current = true;
         setSelectedIndex((prev) => {
           if (prev === -1) return 0;
           return Math.max(prev - 1, 0);
@@ -73,6 +78,15 @@ export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories,
 
   // Auto-scroll selected item into view
   useEffect(() => {
+    if (!shouldScrollRef.current) {
+      shouldScrollRef.current = true; // Reset for next time
+      // Still notify parent of focus change even if we don't scroll
+      if (selectedIndex >= 0) {
+        onFocusChange?.(selectedIndex);
+      }
+      return;
+    }
+
     if (selectedIndex >= 0 && listRef.current) {
       const cards = listRef.current.querySelectorAll('article');
       const selectedCard = cards[selectedIndex] as HTMLElement;
@@ -112,6 +126,7 @@ export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories,
             variant="list"
             isSelected={selectedIndex === index}
             onClick={() => {
+              shouldScrollRef.current = false; // Click usually implies visible, no need to auto-scroll
               setSelectedIndex(index);
               onNavigate?.(index);
             }}

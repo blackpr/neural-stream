@@ -13,20 +13,23 @@ interface StoryGridProps {
 
 export interface StoryGridHandle {
   focusLast: () => void;
-  focusIndex: (index: number) => void;
+  focusIndex: (index: number, options?: { preventScroll?: boolean }) => void;
 }
 
 export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories, onNavigatePastEnd, initialSelectedIndex = -1, onFocusChange, onNavigate }, ref) => {
   const [selectedIndex, setSelectedIndex] = useState<number>(initialSelectedIndex);
   const router = useRouter();
   const gridRef = useRef<HTMLDivElement>(null);
+  const shouldScrollRef = useRef(true);
 
   useImperativeHandle(ref, () => ({
     focusLast: () => {
+      shouldScrollRef.current = true;
       setSelectedIndex(stories.length - 1);
     },
-    focusIndex: (index: number) => {
+    focusIndex: (index: number, options?: { preventScroll?: boolean }) => {
       if (index >= 0 && index < stories.length) {
+        shouldScrollRef.current = !options?.preventScroll;
         setSelectedIndex(index);
       }
     }
@@ -66,12 +69,14 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
         }
 
         e.preventDefault();
+        shouldScrollRef.current = true;
         setSelectedIndex((prev) => {
           if (prev === -1) return 0;
           return Math.min(prev + 1, stories.length - 1);
         });
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
+        shouldScrollRef.current = true;
         setSelectedIndex((prev) => {
           if (prev === -1) return 0;
           return Math.max(prev - 1, 0);
@@ -89,6 +94,7 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
           }
         }
 
+        shouldScrollRef.current = true;
         setSelectedIndex((prev) => {
           if (prev === -1) return 0;
           const next = prev + cols;
@@ -96,6 +102,7 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
         });
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
+        shouldScrollRef.current = true;
         setSelectedIndex((prev) => {
           if (prev === -1) return 0;
           const next = prev - cols;
@@ -114,6 +121,14 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
 
   // Auto-scroll selected item into view
   useEffect(() => {
+    if (!shouldScrollRef.current) {
+      shouldScrollRef.current = true; // Reset
+      if (selectedIndex >= 0) {
+        onFocusChange?.(selectedIndex);
+      }
+      return;
+    }
+
     if (selectedIndex >= 0 && gridRef.current) {
       const cards = gridRef.current.querySelectorAll('article');
       const selectedCard = cards[selectedIndex] as HTMLElement;
@@ -156,6 +171,7 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
             variant="grid"
             isSelected={selectedIndex === index}
             onClick={() => {
+              shouldScrollRef.current = false;
               setSelectedIndex(index);
               onNavigate?.(index);
             }}
