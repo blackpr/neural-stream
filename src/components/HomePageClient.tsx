@@ -55,7 +55,7 @@ export default function HomePageClient() {
   const hasRestoredFocusRef = useRef(false);
 
   // Using explicit handle types
-  const storyComponentRef = useRef<{ focusLast: () => void; focusIndex: (index: number) => void }>(null);
+  const storyComponentRef = useRef<{ focusLast: () => void; focusIndex: (index: number, skipScroll?: boolean) => void }>(null);
 
   // Focus management after loading new stories
   useEffect(() => {
@@ -73,11 +73,10 @@ export default function HomePageClient() {
     // Initial load restoration - only once
     else if (!hasRestoredFocusRef.current && stories.length > 0 && initialFocusIndex >= 0) {
       if (initialFocusIndex < stories.length) {
-        // Use requestAnimationFrame to wait for browser scroll restoration
-        // This gives iOS Safari time to restore the scroll position naturally
+        // Skip scroll on restoration - let browser handle it
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            storyComponentRef.current?.focusIndex(initialFocusIndex);
+            storyComponentRef.current?.focusIndex(initialFocusIndex, true);
             hasRestoredFocusRef.current = true;
             // Clear storage so we don't restore again on simple refresh
             clearStoredFocusIndex();

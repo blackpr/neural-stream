@@ -13,20 +13,23 @@ interface StoryListProps {
 
 export interface StoryListHandle {
   focusLast: () => void;
-  focusIndex: (index: number) => void;
+  focusIndex: (index: number, skipScroll?: boolean) => void;
 }
 
 export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories, onNavigatePastEnd, initialSelectedIndex = -1, onFocusChange, onNavigate }, ref) => {
   const [selectedIndex, setSelectedIndex] = useState<number>(initialSelectedIndex);
+  const skipScrollRef = useRef(false);
   const router = useRouter();
   const listRef = useRef<HTMLDivElement>(null);
 
   useImperativeHandle(ref, () => ({
     focusLast: () => {
+      skipScrollRef.current = false;
       setSelectedIndex(stories.length - 1);
     },
-    focusIndex: (index: number) => {
+    focusIndex: (index: number, skipScroll = false) => {
       if (index >= 0 && index < stories.length) {
+        skipScrollRef.current = skipScroll;
         setSelectedIndex(index);
       }
     }
@@ -73,6 +76,15 @@ export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories,
 
   // Auto-scroll selected item into view
   useEffect(() => {
+    // Skip scroll if this is a restoration
+    if (skipScrollRef.current) {
+      skipScrollRef.current = false;
+      if (selectedIndex >= 0) {
+        onFocusChange?.(selectedIndex);
+      }
+      return;
+    }
+
     if (selectedIndex >= 0 && listRef.current) {
       const cards = listRef.current.querySelectorAll('article');
       const selectedCard = cards[selectedIndex] as HTMLElement;

@@ -13,20 +13,23 @@ interface StoryGridProps {
 
 export interface StoryGridHandle {
   focusLast: () => void;
-  focusIndex: (index: number) => void;
+  focusIndex: (index: number, skipScroll?: boolean) => void;
 }
 
 export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories, onNavigatePastEnd, initialSelectedIndex = -1, onFocusChange, onNavigate }, ref) => {
   const [selectedIndex, setSelectedIndex] = useState<number>(initialSelectedIndex);
+  const skipScrollRef = useRef(false);
   const router = useRouter();
   const gridRef = useRef<HTMLDivElement>(null);
 
   useImperativeHandle(ref, () => ({
     focusLast: () => {
+      skipScrollRef.current = false;
       setSelectedIndex(stories.length - 1);
     },
-    focusIndex: (index: number) => {
+    focusIndex: (index: number, skipScroll = false) => {
       if (index >= 0 && index < stories.length) {
+        skipScrollRef.current = skipScroll;
         setSelectedIndex(index);
       }
     }
@@ -114,6 +117,15 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
 
   // Auto-scroll selected item into view
   useEffect(() => {
+    // Skip scroll if this is a restoration
+    if (skipScrollRef.current) {
+      skipScrollRef.current = false;
+      if (selectedIndex >= 0) {
+        onFocusChange?.(selectedIndex);
+      }
+      return;
+    }
+
     if (selectedIndex >= 0 && gridRef.current) {
       const cards = gridRef.current.querySelectorAll('article');
       const selectedCard = cards[selectedIndex] as HTMLElement;

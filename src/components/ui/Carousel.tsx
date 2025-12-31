@@ -22,6 +22,9 @@ function CarouselContent({ childIds, parentId }: CarouselProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewComment, setPreviewComment] = useState<Comment | null>(null);
+  // Only set restoring flag if we actually have a saved position to restore (not 0)
+  const initialIndex = getStoredCommentFocusIndex(parentId);
+  const isRestoringRef = useRef(initialIndex > 0);
 
   // Persist focus index
   useEffect(() => {
@@ -73,9 +76,11 @@ function CarouselContent({ childIds, parentId }: CarouselProps) {
 
       if (e.key === 'ArrowRight') {
         e.preventDefault();
+        isRestoringRef.current = false; // User is actively navigating
         setSelectedIndex((prev) => Math.min(prev + 1, comments.length - 1));
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
+        isRestoringRef.current = false; // User is actively navigating
         setSelectedIndex((prev) => Math.max(prev - 1, 0));
       } else if (e.key === ' ' && comments[selectedIndex]) {
         e.preventDefault();
@@ -93,6 +98,15 @@ function CarouselContent({ childIds, parentId }: CarouselProps) {
 
   // Auto-scroll selected card into view
   useEffect(() => {
+    // Skip all scrolling if we're restoring initial state
+    if (isRestoringRef.current) {
+      // Clear the flag after a delay to allow browser restoration
+      const timer = setTimeout(() => {
+        isRestoringRef.current = false;
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+
     // Only scroll if we have comments and the index is valid
     if (scrollContainerRef.current && comments[selectedIndex]) {
       // Use requestAnimationFrame to let browser restore scroll position first
