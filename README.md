@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# The Neural Stream
 
-## Getting Started
+> A radically reimagined Hacker News reader with a focus stream interface.
 
-First, run the development server:
+**The Neural Stream** is a specialized Hacker News client designed for
+high-density information consumption with a "Cyber Terminal" aesthetic. It
+emphasizes keyboard navigation, readability, and a unique "Focus Stream" user
+experience.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ✨ Features
+
+- **Focus Stream Interface**: A linear, distraction-free reading mode.
+- **Cyber Terminal Aesthetic**: High-contrast, monochromatic design with
+  distinct typography (JetBrains Mono & Crimson Pro).
+- **Keyboard-First Navigation**: Optimized for mouse-free interaction.
+- **Hybrid View Modes**: Switch between Grid and List layouts.
+- **Deep Discussion Threads**: Optimized rendering of nested Hacker News
+  comments.
+- **Real-Time Updates**: Powered by TanStack Query for efficient data fetching
+  and caching.
+
+## 🛠️ Technology Stack
+
+Built with the latest modern web technologies:
+
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **State Management & Data fetching**:
+  [TanStack Query v5](https://tanstack.com/query/latest)
+- **UI Library**: [React 19](https://react.dev/)
+- **Fonts**: [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono)
+  (UI/Code) & [Crimson Pro](https://fonts.google.com/specimen/Crimson+Pro)
+  (Content)
+
+## 📂 Project Structure
+
+The project follows a Domain-Driven Design (DDD) inspired structure:
+
+```
+src/
+├── app/               # Next.js App Router pages and layouts
+├── components/        # Reusable UI components
+├── domain/            # Core business logic and type definitions
+├── infrastructure/    # External services, API repositories, and providers
+│   ├── api/           # Hacker News / Algolia API clients
+│   ├── mappers/       # Data transformation layers
+│   ├── repositories/  # Data access abstractions
+│   └── providers/     # React Context and Query providers
+└── lib/               # Utility functions and shared constants
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js (Latest LTS recommended)
+- npm, yarn, pnpm, or bun
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd <project-directory>
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
 
-## Deploy on Vercel
+4. **Open the application:** Visit
+   [http://localhost:3000](http://localhost:3000) in your browser.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🏗️ Build & Deploy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+To create a production build:
+
+```bash
+npm run build
+```
+
+To start the production server:
+
+```bash
+npm start
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License.
