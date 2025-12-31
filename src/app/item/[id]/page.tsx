@@ -8,8 +8,9 @@ interface PageProps {
 export default async function ItemPage({ params }: PageProps) {
   const { id } = await params;
   const node = await hnRepository.getStreamNode(id);
+  const ancestry = await hnRepository.getAncestry(node);
 
-  return <ItemPageClient node={node} />;
+  return <ItemPageClient node={node} ancestry={ancestry} />;
 }
 
 export async function generateMetadata({ params }: PageProps) {

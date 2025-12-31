@@ -23,6 +23,30 @@ export class HNFirebaseRepository implements IHNRepository {
     return HNApiMapper.toStreamNode(data);
   }
 
+  async getAncestry(node: StreamNode): Promise<StreamNode[]> {
+    const ancestry: StreamNode[] = [];
+    let currentNode = node;
+
+    // Safety break to prevent infinite loops in case of malformed data
+    let depth = 0;
+    const MAX_DEPTH = 30;
+
+    while ('parentId' in currentNode && currentNode.parentId && depth < MAX_DEPTH) {
+      try {
+        // Fetch parent
+        const parent = await this.getStreamNode(currentNode.parentId);
+        ancestry.unshift(parent);
+        currentNode = parent;
+        depth++;
+      } catch (error) {
+        console.warn(`Failed to fetch ancestor for node ${currentNode.id}`, error);
+        break;
+      }
+    }
+
+    return ancestry;
+  }
+
   async getTopStories(limit = TOP_STORIES_LIMIT): Promise<Story[]> {
     // Fetch top story IDs
     const response = await fetch(`${HN_API_BASE}/topstories.json`, {

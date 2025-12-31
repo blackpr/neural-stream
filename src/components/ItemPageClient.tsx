@@ -9,9 +9,10 @@ import { Carousel } from '@/components/ui/Carousel';
 
 interface ItemPageClientProps {
   node: StreamNode;
+  ancestry?: StreamNode[];
 }
 
-export function ItemPageClient({ node }: ItemPageClientProps) {
+export function ItemPageClient({ node, ancestry = [] }: ItemPageClientProps) {
   const router = useRouter();
 
   // Escape key handler - go back one level in the hierarchy
@@ -30,12 +31,11 @@ export function ItemPageClient({ node }: ItemPageClientProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [router]);
 
-  const path = [
-    {
-      id: node.id,
-      title: 'title' in node ? node.title : `Comment by ${node.author}`,
-    },
-  ];
+  const fullPathNodes = [...ancestry, node];
+  const path = fullPathNodes.map(n => ({
+    id: n.id,
+    title: 'title' in n ? n.title : `Comment by ${n.author}`,
+  }));
 
   const childIds = node.childIds;
 
