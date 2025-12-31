@@ -95,25 +95,41 @@ function CarouselContent({ childIds, parentId }: CarouselProps) {
   useEffect(() => {
     // Only scroll if we have comments and the index is valid
     if (scrollContainerRef.current && comments[selectedIndex]) {
-      const container = scrollContainerRef.current;
-      const cards = container.querySelectorAll('[role="button"]');
-      const selectedCard = cards[selectedIndex] as HTMLElement;
+      // Use requestAnimationFrame to let browser restore scroll position first
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (!scrollContainerRef.current || !comments[selectedIndex]) return;
 
-      if (selectedCard) {
-        // Calculate position to center the card without scrolling the page
-        const containerRect = container.getBoundingClientRect();
-        const cardRect = selectedCard.getBoundingClientRect();
+          const container = scrollContainerRef.current;
+          const cards = container.querySelectorAll('[role="button"]');
+          const selectedCard = cards[selectedIndex] as HTMLElement;
 
-        const scrollLeft = container.scrollLeft +
-          (cardRect.left - containerRect.left) -
-          (container.clientWidth / 2) +
-          (cardRect.width / 2);
+          if (selectedCard) {
+            // Check if card is already in view
+            const containerRect = container.getBoundingClientRect();
+            const cardRect = selectedCard.getBoundingClientRect();
 
-        container.scrollTo({
-          left: scrollLeft,
-          behavior: 'smooth'
+            const isInView = (
+              cardRect.left >= containerRect.left &&
+              cardRect.right <= containerRect.right
+            );
+
+            // Only scroll if not already in view
+            if (!isInView) {
+              // Calculate position to center the card without scrolling the page
+              const scrollLeft = container.scrollLeft +
+                (cardRect.left - containerRect.left) -
+                (container.clientWidth / 2) +
+                (cardRect.width / 2);
+
+              container.scrollTo({
+                left: scrollLeft,
+                behavior: 'smooth'
+              });
+            }
+          }
         });
-      }
+      });
     }
   }, [selectedIndex, comments]);
 

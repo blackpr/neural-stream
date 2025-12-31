@@ -73,12 +73,16 @@ export default function HomePageClient() {
     // Initial load restoration - only once
     else if (!hasRestoredFocusRef.current && stories.length > 0 && initialFocusIndex >= 0) {
       if (initialFocusIndex < stories.length) {
-        setTimeout(() => {
-          storyComponentRef.current?.focusIndex(initialFocusIndex);
-          hasRestoredFocusRef.current = true;
-          // Clear storage so we don't restore again on simple refresh
-          clearStoredFocusIndex();
-        }, 100);
+        // Use requestAnimationFrame to wait for browser scroll restoration
+        // This gives iOS Safari time to restore the scroll position naturally
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            storyComponentRef.current?.focusIndex(initialFocusIndex);
+            hasRestoredFocusRef.current = true;
+            // Clear storage so we don't restore again on simple refresh
+            clearStoredFocusIndex();
+          });
+        });
       }
     }
 
