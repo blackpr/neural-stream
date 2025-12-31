@@ -13,6 +13,9 @@ export default function Home() {
   const [viewMode, setViewModeState] = useState<ViewMode>('list');
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const PAGE_SIZE = 30;
 
   // Escape key handler - do nothing on homepage
   useEffect(() => {
@@ -33,11 +36,12 @@ export default function Home() {
     const savedMode = getViewMode();
     setViewModeState(savedMode);
 
-    // Load stories
-    async function loadStories() {
+    // Load initial stories
+    async function loadInitialStories() {
       try {
-        const fetchedStories = await hnRepository.getTopStories(30);
+        const fetchedStories = await hnRepository.getTopStories(PAGE_SIZE, 0);
         setStories(fetchedStories);
+        setOffset(PAGE_SIZE);
       } catch (error) {
         console.error('Failed to load stories:', error);
       } finally {
@@ -45,7 +49,7 @@ export default function Home() {
       }
     }
 
-    loadStories();
+    loadInitialStories();
   }, []);
 
   const handleViewToggle = (mode: ViewMode) => {
@@ -53,13 +57,32 @@ export default function Home() {
     setViewMode(mode);
   };
 
+  const handleLoadMore = async () => {
+    if (loadingMore) return;
+
+    setLoadingMore(true);
+    try {
+      const moreStories = await hnRepository.getTopStories(PAGE_SIZE, offset);
+      setStories(prev => {
+        const existingIds = new Set(prev.map(s => s.id));
+        const uniqueMore = moreStories.filter(s => !existingIds.has(s.id));
+        return [...prev, ...uniqueMore];
+      });
+      setOffset(prev => prev + PAGE_SIZE);
+    } catch (error) {
+      console.error('Failed to load more stories:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-bg-primary">
       {/* Header */}
-      <header className="border-b border-border-subtle">
+      <header className="border-b border-border-subtle sticky top-0 bg-bg-primary/80 backdrop-blur-md z-10 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg font-bold tracking-tight">
+            <h1 className="text-lg font-bold tracking-tight text-text-primary">
               THE NEURAL STREAM
             </h1>
 
@@ -74,13 +97,36 @@ export default function Home() {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="text-text-secondary font-mono animate-pulse">
-              LOADING STORIES...
+              INITIALIZING STREAM...
             </div>
           </div>
-        ) : viewMode === 'grid' ? (
-          <StoryGrid stories={stories} />
         ) : (
-          <StoryList stories={stories} />
+          <div className="space-y-12">
+            {viewMode === 'grid' ? (
+              <StoryGrid stories={stories} />
+            ) : (
+              <StoryList stories={stories} />
+            )}
+
+            {/* Load More Button */}
+            <div className="flex justify-center pt-8 border-t border-border-subtle/30">
+              <button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="group relative px-8 py-3 bg-transparent overflow-hidden rounded-none border border-text-secondary/30 hover:border-accent-amber transition-colors focus:outline-none focus:ring-2 focus:ring-accent-amber/50"
+              >
+                <div className="absolute inset-0 w-0 bg-accent-amber transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></div>
+                <div className="relative flex items-center gap-3">
+                  {loadingMore && (
+                    <div className="w-4 h-4 border-2 border-text-primary border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  <span className="font-mono text-sm tracking-widest text-text-primary group-hover:text-accent-amber transition-colors">
+                    {loadingMore ? 'DOWNLOADING DATA...' : 'LOAD MORE SIGNALS'}
+                  </span>
+                </div>
+              </button>
+            </div>
+          </div>
         )}
       </main>
 

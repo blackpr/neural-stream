@@ -47,7 +47,7 @@ export class HNFirebaseRepository implements IHNRepository {
     return ancestry;
   }
 
-  async getTopStories(limit = TOP_STORIES_LIMIT): Promise<Story[]> {
+  async getTopStories(limit = TOP_STORIES_LIMIT, offset = 0): Promise<Story[]> {
     // Fetch top story IDs
     const response = await fetch(`${HN_API_BASE}/topstories.json`, {
       next: CACHE_CONFIG.topStories,
@@ -58,7 +58,7 @@ export class HNFirebaseRepository implements IHNRepository {
     }
 
     const storyIds: number[] = await response.json();
-    const limitedIds = storyIds.slice(0, limit);
+    const limitedIds = storyIds.slice(offset, offset + limit);
 
     // Fetch each story in parallel
     const stories = await Promise.all(
