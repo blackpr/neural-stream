@@ -3,7 +3,7 @@ import { ViewMode, DEFAULT_VIEW_MODE, isViewMode } from '@/domain/types/ViewMode
 /**
  * Local storage key for view mode preference
  */
-const VIEW_MODE_KEY = 'neural-stream-view-mode';
+const VIEW_MODE_KEY = 'neural-stream-view-mode-v2';
 
 /**
  * Get the stored view mode preference

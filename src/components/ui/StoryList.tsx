@@ -80,7 +80,7 @@ export const StoryList = forwardRef<StoryListHandle, StoryListProps>(({ stories,
   }, [selectedIndex]);
 
   return (
-    <div ref={listRef} className="flex flex-col gap-4">
+    <div ref={listRef} className="flex flex-col gap-2">
       {stories.map((story, index) => (
         <div
           key={story.id}

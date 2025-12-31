@@ -37,6 +37,7 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
     let cols = 3; // default lg
     if (width < 768) cols = 1; // mobile
     else if (width < 1024) cols = 2; // tablet
+    else if (width >= 1280) cols = 4; // xl desktop
 
     const rows = Math.ceil(stories.length / cols);
     return { cols, rows };
@@ -122,7 +123,7 @@ export const StoryGrid = forwardRef<StoryGridHandle, StoryGridProps>(({ stories,
   return (
     <div
       ref={gridRef}
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
     >
       {stories.map((story, index) => (
         <div

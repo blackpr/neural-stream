@@ -6,7 +6,7 @@ export type ViewMode = 'grid' | 'list';
 /**
  * Default view mode for the homepage
  */
-export const DEFAULT_VIEW_MODE: ViewMode = 'grid';
+export const DEFAULT_VIEW_MODE: ViewMode = 'list';
 
 /**
  * Type guard to check if a value is a valid ViewMode
